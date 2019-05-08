@@ -12,30 +12,16 @@ class TodoListViewController: UITableViewController {
 
     var itemArray = [Item]()
     
-    //Data Persistence User Defaults Step 1
-    let defaults = UserDefaults.standard
+    //create a file path to documents folder
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+ 
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+    
+        loadItems()
         
-        let newItem = Item()
-        newItem.title = "Find Mike"
-        itemArray.append(newItem)
-        
-        let newItem2 = Item()
-        newItem2.title = "Buy eggs"
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.title = "Read book"
-        itemArray.append(newItem3)
-        
-        //Data Persistence User Defaults Step 4
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        }
-
     }
 
     //MARK:  Tableview Datasource Methods
@@ -70,13 +56,12 @@ class TodoListViewController: UITableViewController {
     //Checks whether selected row has a checkmark. If it does, it'll remove checkmark. If it doesn't, it'll add checkmark.
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //print(itemArray[indexPath.row])
         
         //sets done property on current item in the array to the opposite of what it is now
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        //forces tableview to call its datasource methods again. it reloads data that's meant to be inside
-        tableView.reloadData()
+        //to save checkmark to Items.plist
+        saveItems()
         
         //UI improvement: make the cell deselect immediately
         tableView.deselectRow(at: indexPath, animated: true)
@@ -100,10 +85,8 @@ class TodoListViewController: UITableViewController {
             
             self.itemArray.append(newItem)
             
-            //Data Persistence User Defaults Step 2
-            self.defaults.set(self.itemArray, forKey: "TodoListArray")
-
-            self.tableView.reloadData()
+            self.saveItems()
+            
         }
         
         alert.addTextField { (alertTextField) in
@@ -114,6 +97,33 @@ class TodoListViewController: UITableViewController {
         alert.addAction(action)
         
         present(alert, animated: true, completion: nil)
+    }
+    
+    //MARK: Model Manipulation Methods
+    
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+        
+        self.tableView.reloadData()
+    }
+    
+    func loadItems () {
+        if let data = try? Data(contentsOf: dataFilePath!) {
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array, \(error)")
+            }
+            
+        }
     }
     
     
