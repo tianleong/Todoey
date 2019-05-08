@@ -12,9 +12,18 @@ class TodoListViewController: UITableViewController {
 
     var itemArray = ["Find Mike", "Buy Eggs", "Read book"]
     
+    //Data Persistence User Defaults Step 1
+    let defaults = UserDefaults.standard
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+        //Data Persistence User Defaults Step 4
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items 
+        }
+
     }
 
     //MARK:  Tableview Datasource Methods
@@ -67,6 +76,10 @@ class TodoListViewController: UITableViewController {
             
             //what will happen once user clicks "add item" button on UIAlert
             self.itemArray.append(textField.text!)
+            
+            //Data Persistence User Defaults Step 2
+            self.defaults.set(self.itemArray, forKey: "TodoListArray")
+
             self.tableView.reloadData()
         }
         
